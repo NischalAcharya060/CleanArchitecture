@@ -87,9 +87,7 @@ namespace Presentation.StudentCRUD.Controllers
                 return NotFound();
             }
 
-            // Update user properties with values from the view model
             user.Email = registerViewModel.Email;
-            // Update other properties as needed
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
@@ -98,11 +96,36 @@ namespace Presentation.StudentCRUD.Controllers
             }
             else
             {
-                // If there are errors, return BadRequest with error messages
                 var errors = result.Errors.Select(e => e.Description);
                 return BadRequest(errors);
             }
         }
+
+        [HttpPut]
+        [Route("ChangePassword")]
+        public async Task<IActionResult> ChangePassword(string userId, string newPassword)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Change the user password
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            if (result.Succeeded)
+            {
+                return Ok("Password changed successfully.");
+            }
+            else
+            {
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(errors);
+            }
+        }
+
 
 
 
