@@ -11,11 +11,19 @@ namespace Presentation.StudentCRUD.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IConfiguration _configuration;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+        public record LoginResponse(bool Flag, string Token, string Message);
+
+        public record UserSession(string? Id, string? Name, string? Email, string? Role);
+
+        public AccountController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, SignInManager<AppUser> signInManager, IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _configuration = configuration;
+            _signInManager = signInManager;
         }
 
         [HttpPost]

@@ -5,7 +5,10 @@ using Infrastructure.StudentCRUD;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 namespace Presentation.StudentCRUD
@@ -28,9 +31,11 @@ namespace Presentation.StudentCRUD
             builder.Services.AddAuthorizationBuilder();
 
             //Configure DbContext
-            builder.Services.AddIdentity<AppUser,IdentityRole>()
+            builder.Services.AddIdentity<AppUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDBContext>()
-                .AddApiEndpoints();
+                .AddSignInManager()
+                .AddRoles<IdentityRole>();
+
 
 
             builder.Services.AddControllers();
@@ -59,20 +64,35 @@ namespace Presentation.StudentCRUD
                 }
             }
 
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(option =>
-             {
-            option.TokenValidationParameters = new TokenValidationParameters
-            {
-              ValidateIssuerSigningKey = true,
-              IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-              .GetBytes(builder.Configuration.GetSection("AppSetting:Token").Value)),
-              ValidateIssuer = false,
-              ValidateAudience = false,
-               };
-            });6
 
-            app.MapIdentityApi<AppUser>();
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:key"]!))
+                };
+            });
+
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey
+                });
+                options.OperationFilter<SecurityRequirementsOperationFilter>();
+            });
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
