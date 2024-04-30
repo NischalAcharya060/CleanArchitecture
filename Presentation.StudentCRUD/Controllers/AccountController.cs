@@ -103,12 +103,12 @@ namespace Presentation.StudentCRUD.Controllers
 
         [HttpPut]
         [Route("ChangePassword")]
-        public async Task<IActionResult> ChangePassword(string userId, string newPassword)
+        public async Task<IActionResult> ChangePassword(string email, string newPassword)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                return NotFound();
+                return NotFound("User not found.");
             }
 
             // Change the user password
@@ -125,6 +125,7 @@ namespace Presentation.StudentCRUD.Controllers
                 return BadRequest(errors);
             }
         }
+
 
 
 

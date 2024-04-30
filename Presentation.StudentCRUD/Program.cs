@@ -2,8 +2,11 @@
 using Application.StudentCRUD;
 using Domain.StudentCRUD;
 using Infrastructure.StudentCRUD;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Presentation.StudentCRUD
 {
@@ -55,6 +58,19 @@ namespace Presentation.StudentCRUD
                     }
                 }
             }
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(option =>
+             {
+            option.TokenValidationParameters = new TokenValidationParameters
+            {
+              ValidateIssuerSigningKey = true,
+              IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+              .GetBytes(builder.Configuration.GetSection("AppSetting:Token").Value)),
+              ValidateIssuer = false,
+              ValidateAudience = false,
+               };
+            });6
 
             app.MapIdentityApi<AppUser>();
 
